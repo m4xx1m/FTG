@@ -57,7 +57,7 @@ class Distorter:
         exporter.process(an, outfile)
         return outfile.getvalue()
 
-    def distort(self, target: bytes, config: list) -> io.BytesIO:
+    def distort(self, target: bytes, config: list):
         distorted = self.tgs_to_json(target)
 
         for cf in config:
@@ -67,7 +67,8 @@ class Distorter:
         outFile.name = "distorted.tgs"
         try:
             outFile.write(self.json_to_tgs(distorted))
-        except: return None
+        except:
+            return None
         outFile.seek(0)
         return outFile
 
