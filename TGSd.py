@@ -83,7 +83,7 @@ class Distorter:
                 )
             except Exception as err:
                 logging.error(f'Error in Distorter:\n{err}')
-                return 
+                continue 
 
             if distorted:
                 return_files.append(distorted)
