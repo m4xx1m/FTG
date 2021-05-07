@@ -5,6 +5,8 @@
 
 # requires: lottie
 
+# module in beta mode, btw я уезжаю на дачу
+
 from .. import loader, utils
 import io
 import logging
