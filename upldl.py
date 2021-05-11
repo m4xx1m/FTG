@@ -1,26 +1,21 @@
 # by @m4xx1m
 
-# requires: humanize pytz python-magic nest-asyncio
+# requires: humanize python-magic nest-asyncio
 
 # welcome to sheetcode
 
-import encodings.aliases
-
-from .. import loader, utils
-import telethon
+import asyncio
 import io
+import logging
 import os
 import humanize
 import magic
-import logging
-import pytz
 import nest_asyncio
-from datetime import datetime, timedelta
-import asyncio
-from telethon.tl.types import DocumentAttributeFilename
-from telethon import events
+
+from .. import loader, utils
 
 nest_asyncio.apply()
+
 
 @loader.tds
 class UplDlbym4xx1mMod(loader.Module):
@@ -40,19 +35,36 @@ class UplDlbym4xx1mMod(loader.Module):
         "filesize_without_filename": "<code>{filesize}</code>",
         "cant_decode": "<code>{enc}</code>: <b>codec can\'t decode file</b>",
         "cant_find_enc": "<code>{enc}</code>: <b>Can't find encoding</b>",
-        "emply_logs": "<b>Logs are empty</b>"
+        "emply_logs": "<b>Logs are empty</b>",
+        "ignoreLongFileDoc": "Ignore exceeding the limit and show the last 4096 characters",
+        "sizeThreshouldDoc": "Show progress stat if file more ... bytes (default 8MB)",
+        "editTimeoutDoc": "Timeout for edit message in download progress (default 1.5 sec)"
     }
 
-    editTimeout = 1.5
-    sizeThreshould = 8*1024*1024 # 8MB
     progress_info = {"isrunned": False}
-    ignoreLongFile = True # for .catlog and .cat
 
+    def __init__(self):
+        self.config = loader.ModuleConfig(
+            "ignoreLongFile",  # for .catlog and .cat
+            True,
+            self.strings['ignoreLongFileDoc'],
+
+            "sizeThreshould",
+            8388608,
+            self.strings['sizeThreshouldDoc'],
+
+            "editTimeout",
+            1.5,
+            self.strings['editTimeoutDoc'],
+
+            "enable_.dl",
+            False,
+            "coming soon"
+        )
 
     async def client_ready(self, client, db):
         self.client = client
         self.db = db
-
 
     async def getenccmd(self, message):
         """.getenc + reply message
@@ -69,7 +81,6 @@ class UplDlbym4xx1mMod(loader.Module):
         file_content = await client.download_file(reply)
         enc = magic.Magic(mime_encoding=True).from_buffer(file_content)
         await message.edit(f'<code>{enc}</code>')
-
 
     async def catcmd(self, message):
         """.cat <encoding:optional> + reply message
@@ -106,13 +117,12 @@ class UplDlbym4xx1mMod(loader.Module):
             return
         if len(file_content) > 4096:
             if self.ignoreLongFile:
-                file_content = file_content[len(file_content)-4096::]
+                file_content = file_content[len(file_content) - 4096::]
             else:
                 await message.edit(self.strings['longFile'])
                 return
 
         await message.edit(f"<code>{file_content}</code>")
-
 
     async def catlogcmd(self, message):
         """.catlog <level:default 40>
@@ -139,7 +149,6 @@ class UplDlbym4xx1mMod(loader.Module):
                 return
 
         await message.edit(f"<code>{file_content}</code>")
-
 
     async def totxtcmd(self, message):
         """.totxt <filename:optional> + reply message
@@ -170,7 +179,6 @@ class UplDlbym4xx1mMod(loader.Module):
 
         await message.delete()
 
-
     async def sizecmd(self, message):
         """.size + file (in message or reply)"""
         reply = await message.get_reply_message()
@@ -181,6 +189,7 @@ class UplDlbym4xx1mMod(loader.Module):
             msgWithFile = reply
         else:
             await message.edit(self.strings["file_not_found"])
+            return
         if msgWithFile.file.name:
             text = self.strings['filesize'].format(
                 filesize=humanize.naturalsize(msgWithFile.file.size, binary=True),
@@ -192,7 +201,6 @@ class UplDlbym4xx1mMod(loader.Module):
             )
 
         await message.edit(text)
-
 
     def progress(self, **kwargs):
         for key, arg in kwargs.items():
@@ -216,8 +224,10 @@ class UplDlbym4xx1mMod(loader.Module):
             await asyncio.sleep(self.editTimeout)
 
     # welcome to sheetcode
-    async def dl(self, message): # coming soon 
-        """.dl <path:default=$HOME> + reply file or file in message"""
+    async def dlcmd(self, message):  # coming soon
+        """.dl <path:default=$HOME> + reply file or file in message | DISABLED"""
+        if not self.config['enable_.dl']:
+            return
         client = self.client
         reply = await message.get_reply_message()
         args = utils.get_args(message)
@@ -229,7 +239,6 @@ class UplDlbym4xx1mMod(loader.Module):
         else:
             await message.edit(self.strings["file_not_found"])
             return
-
 
         if len(args) < 1:
             path = os.getenv('HOME') + '/' + messageWithFile.file.name
