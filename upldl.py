@@ -116,7 +116,7 @@ class UplDlbym4xx1mMod(loader.Module):
             await message.edit(self.strings['cant_decode'].format(enc=enc))
             return
         if len(file_content) > 4096:
-            if self.ignoreLongFile:
+            if self.config['ignoreLongFile']:
                 file_content = file_content[len(file_content) - 4096::]
             else:
                 await message.edit(self.strings['longFile'])
@@ -142,7 +142,7 @@ class UplDlbym4xx1mMod(loader.Module):
             await message.edit(self.strings['emply_logs'])
             return
         if len(file_content) > 4096:
-            if self.ignoreLongFile:
+            if self.config['ignoreLongFile']:
                 file_content = file_content[len(file_content) - 4096::]
             else:
                 await message.edit(self.strings['longFile'])
@@ -221,7 +221,7 @@ class UplDlbym4xx1mMod(loader.Module):
                     )
                 except:
                     return
-            await asyncio.sleep(self.editTimeout)
+            await asyncio.sleep(self.config['editTimeout'])
 
     # welcome to sheetcode
     async def dlcmd(self, message):  # coming soon
@@ -251,7 +251,7 @@ class UplDlbym4xx1mMod(loader.Module):
             path += messageWithFile.file.name
 
         await message.edit(self.strings["downloading"])
-        if messageWithFile.file.size >= self.sizeThreshould:
+        if messageWithFile.file.size >= self.config['sizeThreshould']:
             print_progress_runner_task = self.client.loop.create_task(self.print_progress_runner())
             await messageWithFile.download_media(
                 file=path,
