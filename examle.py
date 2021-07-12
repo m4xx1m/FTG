@@ -43,9 +43,9 @@ class GavnischeMod(loader.Module):          # это название модул
 		"""ебать"""                         		# это описание команды в хелпе
 		# client = message.client					# можно так, если лень писать client_ready
 
-		await message.edit(self.strings['author'])  
+		await message.edit(self.strings('author', message))  
 		logger.debug('ахуеть')
-		ms = await message.respond(self.strings["why"].format(message=message.text))
+		ms = await message.respond(self.strings("why", message).format(message=message.text))
 		await asyncio.sleep(2)
 
 		for t in range(3):
@@ -55,6 +55,6 @@ class GavnischeMod(loader.Module):          # это название модул
 		await message.delete()
 		
 		for key, value in self.config.items():
-			await ms.edit(self.strings['keyInfo'].format(key=key, item=value))
+			await ms.edit(self.strings('keyInfo', message).format(key=key, item=value))
 			await asyncio.sleep(2)
 		
